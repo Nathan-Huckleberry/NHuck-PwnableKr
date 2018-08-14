@@ -1,3 +1,4 @@
+<h1>collision</h1>
 The challenge starts with
 
 ```
@@ -9,7 +10,7 @@ ssh col@pwnable.kr -p2222 (pw:guest)
 
 Seems like we need to make a hash collision
 
-[Alt text](image.png?raw=true)
+![Alt text](image.png?raw=true)
 
 The hash function is the sum of the 5 bytes as integers. 
 
@@ -20,4 +21,4 @@ The hash function is the sum of the 5 bytes as integers.
 Each integer is read in little endian and \x00 marks the end of a string so we need to use something other than \x00 as filler.
 I just used \x01 and subtracted 4 from each value. I'm using os.write instead of print because python3 print() automatically encodes instead of printing raw binary.
 
-[Alt text](image2.png?raw=true)
+![Alt text](image2.png?raw=true)
