@@ -72,7 +72,7 @@ gdb-peda$ x/30x $esp
 ```
 
 We can see 0x65656565 (eeee) is 52 bytes from 0xdeadbeef. This means we need to overwrite 52 bytes.
-A quick exploit written using pwntools.
+I wrote a quick exploit using pwntools.
 
 ```
 from pwn import *;
